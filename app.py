@@ -16,8 +16,12 @@ if not api_key:
 genai.configure(api_key=api_key)
 
 def get_gemini_response(input, pdf_content, prompt):
-    model = genai.GenerativeModel('gemini-2.5-flash')
-    response = model.generate_content([input, pdf_content, prompt])  # Modified
+    models = [m.name for m in genai.list_models()
+              if "generateContent" in m.supported_generation_methods]
+    skip = ("lite", "preview", "live", "tts", "image", "thinking", "exp")
+    flash = [n for n in models if "flash" in n and not any(s in n for s in skip)]
+    model = genai.GenerativeModel(flash[0] if flash else models[0])
+    response = model.generate_content([input, pdf_content, prompt])
     return response.text
 
 def input_pdf_setup(uploaded_file):
